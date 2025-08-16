@@ -1,0 +1,188 @@
+Codesoft Project Management Tool.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Management Tool</title>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f4f6f8;
+        margin: 0;
+        padding: 0;
+    }
+    header {
+        background: #007bff;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .container {
+        max-width: 900px;
+        margin: 20px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+        border-bottom: 2px solid #eee;
+        padding-bottom: 5px;
+        color: #333;
+    }
+    input, button, select {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    button {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    button:hover {
+        background: #0056b3;
+    }
+    .project {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .task {
+        background: #eef3f7;
+        padding: 10px;
+        border-radius: 6px;
+        margin: 5px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .completed {
+        text-decoration: line-through;
+        color: gray;
+    }
+    .progress {
+        height: 8px;
+        background: #ddd;
+        border-radius: 4px;
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        height: 100%;
+        background: #28a745;
+        width: 0;
+        transition: width 0.3s ease-in-out;
+    }
+</style>
+</head>
+<body>
+
+<header>📋 Project Management Tool</header>
+
+<div class="container">
+    <h2>Create Project</h2>
+    <input type="text" id="projectName" placeholder="Enter project name">
+    <button onclick="addProject()">Add Project</button>
+
+    <h2>Projects</h2>
+    <div id="projects"></div>
+</div>
+
+<script>
+let projects = JSON.parse(localStorage.getItem('projects')) || [];
+
+function saveProjects() {
+    localStorage.setItem('projects', JSON.stringify(projects));
+}
+
+function addProject() {
+    const name = document.getElementById('projectName').value.trim();
+    if (name) {
+        projects.push({ name, tasks: [] });
+        document.getElementById('projectName').value = '';
+        saveProjects();
+        renderProjects();
+    } else {
+        alert('Please enter a project name.');
+    }
+}
+
+function addTask(projectIndex) {
+    const taskName = prompt('Enter task name:');
+    const deadline = prompt('Enter deadline (YYYY-MM-DD):');
+    if (taskName) {
+        projects[projectIndex].tasks.push({ name: taskName, deadline, completed: false });
+        saveProjects();
+        renderProjects();
+    }
+}
+
+function toggleTask(projectIndex, taskIndex) {
+    projects[projectIndex].tasks[taskIndex].completed = !projects[projectIndex].tasks[taskIndex].completed;
+    saveProjects();
+    renderProjects();
+}
+
+function deleteProject(index) {
+    if (confirm('Delete this project?')) {
+        projects.splice(index, 1);
+        saveProjects();
+        renderProjects();
+    }
+}
+
+function deleteTask(projectIndex, taskIndex) {
+    projects[projectIndex].tasks.splice(taskIndex, 1);
+    saveProjects();
+    renderProjects();
+}
+
+function renderProjects() {
+    const container = document.getElementById('projects');
+    container.innerHTML = '';
+    projects.forEach((project, pIndex) => {
+        const completedTasks = project.tasks.filter(t => t.completed).length;
+        const progressPercent = project.tasks.length ? (completedTasks / project.tasks.length) * 100 : 0;
+
+        let projectHTML = `
+            <div class="project">
+                <h3>${project.name}</h3>
+                <button onclick="addTask(${pIndex})">+ Add Task</button>
+                <button onclick="deleteProject(${pIndex})" style="background:#dc3545;">Delete Project</button>
+                <div class="progress"><div class="progress-bar" style="width:${progressPercent}%;"></div></div>
+        `;
+
+        project.tasks.forEach((task, tIndex) => {
+            projectHTML += `
+                <div class="task">
+                    <span class="${task.completed ? 'completed' : ''}">
+                        ${task.name} (Due: ${task.deadline || 'No date'})
+                    </span>
+                    <div>
+                        <button onclick="toggleTask(${pIndex}, ${tIndex})" style="background:#28a745;">✔</button>
+                        <button onclick="deleteTask(${pIndex}, ${tIndex})" style="background:#dc3545;">✖</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        projectHTML += `</div>`;
+        container.innerHTML += projectHTML;
+    });
+}
+
+renderProjects();
+</script>
+
+</body>
+</html>
